@@ -67,11 +67,12 @@ const characters = [
 	// "9",
 ];
 
+
 const characterWidth = 18.38;
 const characterHeight = 36;
 const changeTextInterval = 20;
 
-import useWindowSize from "@/lib/hooks/useWindowSize";
+import useWindowSize, { WindowSize } from "@/lib/hooks/useWindowSize";
 import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
 
@@ -82,10 +83,12 @@ function getRandomCharacter() {
 function AppearingText({
 	text,
 	className,
+	textClassName,
 	startDelay,
 }: {
 	text: string;
 	className?: string;
+	textClassName?: string;
 	startDelay?: number;
 }) {
 	const [currentText, setCurrentText] = useState<string[]>([]);
@@ -126,6 +129,8 @@ function AppearingText({
 					currentText[index] = getRandomCharacter();
 				}
 			});
+
+			setCurrentText([...currentText]);
 		}, changeTextInterval);
 
 		return () => {
@@ -134,20 +139,20 @@ function AppearingText({
 	}, []);
 
 	return (
-		<p className={cn(`bg-background w-max`, className ?? "")}>
-			{currentText}
-		</p>
+		<div className={cn("bg-background w-max", className)}>
+			<p className={textClassName ?? ""}>{currentText}</p>
+		</div>
 	);
 }
 
-export default function Home() {
+function TextBackground({
+	windowSize,
+	setCharAmount,
+}: {
+	windowSize: WindowSize;
+	setCharAmount: (amount: any) => void;
+}) {
 	const [text, setText] = useState<string>("");
-	const windowSize = useWindowSize();
-
-	const [charAmount, setCharAmount] = useState({
-		horizontal: 0,
-		vertical: 0,
-	});
 
 	useEffect(() => {
 		if (!windowSize.width || !windowSize.height) {
@@ -166,13 +171,10 @@ export default function Home() {
 		});
 
 		const interval = setInterval(() => {
+			const totalCharacters = charAmountHorizontal * charAmountVertical;
 			let assembedText = "";
 
-			for (
-				let i = 0;
-				i < charAmountHorizontal * charAmountVertical;
-				i++
-			) {
+			for (let i = 0; i < totalCharacters; i++) {
 				assembedText += getRandomCharacter();
 			}
 
@@ -184,6 +186,28 @@ export default function Home() {
 		};
 	}, [windowSize]);
 
+	return (
+		<div className="w-screen h-screen overflow-hidden absolute -z-10">
+			<p
+				className="text-3xl text-accent/25 text-wrap h-screen break-words radial-gradient"
+				style={{
+					width: `calc(100vw + ${characterWidth}px)`,
+					backgroundClip: "text",
+				}}
+			>
+				{text}
+			</p>
+		</div>
+	);
+}
+
+function Links({
+	windowSize,
+	charAmount,
+}: {
+	windowSize: WindowSize;
+	charAmount: any;
+}) {
 	function getHorizontalTextOffset(percentage: number, textLength: number) {
 		// percentage is the percentage of the screen width the text should be offset
 		// eg 3 would be 1/3 of the screen width, 2 would be 1/2 of the screen width
@@ -199,71 +223,62 @@ export default function Home() {
 		return characterWidth * offset;
 	}
 
-	function getVerticalTextOffset(percentage: number, textLength: number) {
-		let offset =
-			Math.floor(charAmount.vertical / percentage) -
-			Math.floor(textLength / 2);
+	if (!windowSize.width || !windowSize.height) return;
 
-		if (offset == 0) {
-			offset = 1;
-		}
+	return (
+		<div
+			className="text-3xl bg-none flex flex-col"
+			style={{
+				paddingTop: `${characterHeight * (windowSize.width > 500 ? 5 : 4)}px`,
+				paddingLeft: `${getHorizontalTextOffset(3.2, 13)}px`,
+			}}
+		>
+			<AppearingText
+				text="Hey, I'm Alex"
+				className="text-blue-200"
+				startDelay={100}
+			/>
 
-		return characterHeight;
-	}
+			<span style={{ height: `${characterHeight}px` }} />
 
-	// console.log(getHorizontalTextOffset(3.2, 13));
+			<AppearingText
+				text="Projects"
+				className="animate-fade animate-delay-[2000ms] transition-all text-foreground"
+				textClassName="transition-all hover:brightness-150 duration-500 hover:cursor-pointer"
+				startDelay={2000}
+			/>
+			<AppearingText
+				text="About"
+				className="animate-fade animate-delay-[2500ms]"
+				textClassName="transition-all hover:brightness-150 duration-500 hover:cursor-pointer"
+				startDelay={2500}
+			/>
+			<AppearingText
+				text="Contact"
+				className="animate-fade animate-delay-[3000ms]"
+				textClassName="transition-all hover:brightness-150 duration-500 hover:cursor-pointer"
+				startDelay={3000}
+			/>
+		</div>
+	);
+}
 
-    if (!windowSize.width || !windowSize.height) {
-        return null;
-    }
+export default function Home() {
+	const windowSize = useWindowSize();
+
+	const [charAmount, setCharAmount] = useState({
+		horizontal: 0,
+		vertical: 0,
+	});
 
 	return (
 		<>
-			<div className="w-screen h-screen overflow-hidden absolute -z-10">
-				<p
-					className="text-3xl text-accent/25 text-wrap h-screen break-words radial-gradient"
-					style={{
-						width: `calc(100vw + ${characterWidth}px)`,
-						// background: `radial-gradient(circle 350px at left 60% top 60%, rgba(96, 165, 250, 0.6), hsl(var(--background)))`,
-						backgroundClip: "text",
-					}}
-				>
-					{text}
-				</p>
-			</div>
+			<TextBackground
+				windowSize={windowSize}
+				setCharAmount={setCharAmount}
+			/>
 
-			<div
-				className="text-3xl bg-none flex flex-col"
-				style={{
-					paddingTop: `${characterHeight * (windowSize.width > 500 ? 5 : 4)}px`,
-					paddingLeft: `${getHorizontalTextOffset(3.2, 13)}px`,
-				}}
-			>
-				{/* <p className="bg-background">Hey, Im Alex</p> */}
-				<AppearingText
-					text="Hey, I'm Alex"
-					className="text-blue-200"
-					startDelay={100}
-				/>
-
-				<span style={{ height: `${characterHeight}px` }} />
-
-				<AppearingText
-					text="Projects"
-					className="animate-fade animate-delay-[2000ms] animate-duration-300"
-					startDelay={2000}
-				/>
-				<AppearingText
-					text="About"
-					className="animate-fade animate-delay-[2500ms]"
-					startDelay={2500}
-				/>
-				<AppearingText
-					text="Contact"
-					className="animate-fade animate-delay-[3000ms]"
-					startDelay={3000}
-				/>
-			</div>
+			<Links windowSize={windowSize} charAmount={charAmount} />
 		</>
 	);
 }
