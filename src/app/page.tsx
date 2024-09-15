@@ -67,13 +67,12 @@ const characters = [
 	// "9",
 ];
 
-
 const characterWidth = 18.38;
 const characterHeight = 36;
 const changeTextInterval = 20;
 
 import useWindowSize, { WindowSize } from "@/lib/hooks/useWindowSize";
-import { cn } from "@/lib/utils";
+import { cn, sleep } from "@/lib/utils";
 import { useEffect, useState } from "react";
 
 function getRandomCharacter() {
@@ -85,27 +84,16 @@ function AppearingText({
 	className,
 	textClassName,
 	startDelay,
+	onClick,
 }: {
 	text: string;
 	className?: string;
 	textClassName?: string;
 	startDelay?: number;
+	onClick?: () => void;
 }) {
 	const [currentText, setCurrentText] = useState<string[]>([]);
-	// const [classNameDelayState, setClassNameDelayState] = useState<string>("");
-	const timePerCharacter = 150;
-
-	// useEffect(() => {
-	// 	if (!classNameDelay || !delayedClassName) return;
-
-	// 	async function sleep(ms: number) {
-	// 		return new Promise((resolve) => setTimeout(resolve, ms));
-	// 	}
-
-	// 	sleep(classNameDelay).then(() => {
-	// 		setClassNameDelayState(delayedClassName);
-	// 	});
-	// }, []);
+	const timePerCharacter = 80;
 
 	useEffect(() => {
 		const start = Date.now();
@@ -139,7 +127,7 @@ function AppearingText({
 	}, []);
 
 	return (
-		<div className={cn("bg-background w-max", className)}>
+		<div className={cn("bg-background w-max", className)} onClick={onClick}>
 			<p className={textClassName ?? ""}>{currentText}</p>
 		</div>
 	);
@@ -171,7 +159,7 @@ function TextBackground({
 		});
 
 		const interval = setInterval(() => {
-			const totalCharacters = charAmountHorizontal * charAmountVertical;
+			let totalCharacters = charAmountHorizontal * charAmountVertical;
 			let assembedText = "";
 
 			for (let i = 0; i < totalCharacters; i++) {
@@ -189,7 +177,7 @@ function TextBackground({
 	return (
 		<div className="w-screen h-screen overflow-hidden absolute -z-10">
 			<p
-				className="text-3xl text-accent/25 text-wrap h-screen break-words radial-gradient"
+				className={`text-3xl text-accent/10 text-wrap h-screen break-words radial-gradient transition-all animate-fade`}
 				style={{
 					width: `calc(100vw + ${characterWidth}px)`,
 					backgroundClip: "text",
@@ -235,7 +223,7 @@ function Links({
 		>
 			<AppearingText
 				text="Hey, I'm Alex"
-				className="text-blue-200"
+				className="text-blue-200 animate-fade transition-all"
 				startDelay={100}
 			/>
 
@@ -243,21 +231,21 @@ function Links({
 
 			<AppearingText
 				text="Projects"
-				className="animate-fade animate-delay-[2000ms] transition-all text-foreground"
-				textClassName="transition-all hover:brightness-150 duration-500 hover:cursor-pointer"
-				startDelay={2000}
+				className="animate-fade animate-delay-[1000ms] transition-all text-foreground"
+				textClassName="transition-all hover:brightness-150 duration-200 hover:cursor-pointer"
+				startDelay={1200}
 			/>
 			<AppearingText
 				text="About"
-				className="animate-fade animate-delay-[2500ms]"
-				textClassName="transition-all hover:brightness-150 duration-500 hover:cursor-pointer"
-				startDelay={2500}
+				className="animate-fade animate-delay-[1300ms]"
+				textClassName="transition-all hover:brightness-150 duration-200 hover:cursor-pointer"
+				startDelay={1500}
 			/>
 			<AppearingText
 				text="Contact"
-				className="animate-fade animate-delay-[3000ms]"
-				textClassName="transition-all hover:brightness-150 duration-500 hover:cursor-pointer"
-				startDelay={3000}
+				className="animate-fade animate-delay-[1600ms]"
+				textClassName="transition-all hover:brightness-150 duration-200 hover:cursor-pointer"
+				startDelay={1800}
 			/>
 		</div>
 	);
@@ -266,19 +254,31 @@ function Links({
 export default function Home() {
 	const windowSize = useWindowSize();
 
+	const [mountLinks, setMountLinks] = useState(false);
+	const [transitionPage, setTransitionPage] = useState(false);
 	const [charAmount, setCharAmount] = useState({
 		horizontal: 0,
 		vertical: 0,
 	});
 
+	useEffect(() => {
+		sleep(1000).then(() => {
+			setMountLinks(true);
+		});
+	}, []);
+
 	return (
 		<>
+			<div className=" w-screen h-screen absolute  bg-red-500 z-30 -left-full"></div>
+
 			<TextBackground
 				windowSize={windowSize}
 				setCharAmount={setCharAmount}
 			/>
 
-			<Links windowSize={windowSize} charAmount={charAmount} />
+			{mountLinks && (
+				<Links windowSize={windowSize} charAmount={charAmount} />
+			)}
 		</>
 	);
 }
